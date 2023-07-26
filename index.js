@@ -9,7 +9,7 @@ const pool = new Pool({
     connectionString: process.env.ELEPHANT_SQL_CONNECTION_STRING,
 });
 
-//app.use(cors())
+app.use(cors());
 app.use(express.json());
 
 //get movies from pg on route api/movies
