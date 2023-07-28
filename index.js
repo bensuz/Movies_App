@@ -4,6 +4,7 @@ require("dotenv/config");
 const PORT = process.env.PORT || 8000;
 const { Pool } = require("pg");
 const cors = require("cors");
+const axios = require("axios");
 
 const pool = new Pool({
     connectionString: process.env.ELEPHANT_SQL_CONNECTION_STRING,
@@ -11,6 +12,8 @@ const pool = new Pool({
 
 app.use(cors());
 app.use(express.json());
+const TMDB_ACCESS_TOKEN = process.env.TMDB_ACCESS_TOKEN;
+const TMDB_API_KEY = process.env.TMDB_API_KEY;
 
 //get movies from pg on route api/movies
 app.get("/api/movies", (req, res) => {
@@ -34,6 +37,30 @@ app.get("/api/movies/:id", (req, res) => {
         })
         .catch((e) => res.status(500).json({ message: e.message }));
 });
+
+app.get("/api/public", async (req, res) => {
+    try {
+        const options = {
+            method: "GET",
+            url: "https://api.themoviedb.org/3/movie/popular",
+            headers: {
+                accept: "application/json",
+                Authorization: `Bearer ${TMDB_ACCESS_TOKEN}`,
+            },
+        };
+
+        // Fetch popular movies from TMDB API using Axios
+        const response = await axios.request(options);
+
+        // Send the movie data to the client
+        res.json(response.data.results);
+        // console.log(response.data);
+    } catch (error) {
+        console.error("Error fetching movies:", error);
+        res.status(500).json({ error: "Failed to fetch movies" });
+    }
+});
+
 app.post("/api/movies", (req, res) => {
     const { title, director, year, rating, poster } = req.body;
     pool.query(
