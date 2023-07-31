@@ -38,6 +38,8 @@ app.get("/api/movies/:id", (req, res) => {
         .catch((e) => res.status(500).json({ message: e.message }));
 });
 
+//fetching movies for discover section from TMDB
+
 app.get("/api/public", async (req, res) => {
     try {
         const options = {
@@ -58,6 +60,29 @@ app.get("/api/public", async (req, res) => {
     } catch (error) {
         console.error("Error fetching movies:", error);
         res.status(500).json({ error: "Failed to fetch movies" });
+    }
+});
+
+app.get("/api/public/:id", async (req, res) => {
+    try {
+        const { id } = req.params; // Get the movie ID from the request parameters
+        const options = {
+            method: "GET",
+            url: `https://api.themoviedb.org/3/movie/${id}`, // Use the movie ID in the URL to fetch details for that specific movie
+            headers: {
+                accept: "application/json",
+                Authorization: `Bearer ${TMDB_ACCESS_TOKEN}`,
+            },
+        };
+
+        // Fetch the movie details from TMDB API using Axios
+        const response = await axios.request(options);
+
+        // Send the movie data to the client
+        res.json(response.data);
+    } catch (error) {
+        console.error("Error fetching movie details:", error);
+        res.status(500).json({ error: "Failed to fetch movie details" });
     }
 });
 
