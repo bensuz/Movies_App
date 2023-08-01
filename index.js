@@ -56,7 +56,7 @@ app.get("/api/public", async (req, res) => {
 
         // Send the movie data to the client
         res.json(response.data.results);
-        // console.log(response.data);
+        console.log(response.data.results);
     } catch (error) {
         console.error("Error fetching movies:", error);
         res.status(500).json({ error: "Failed to fetch movies" });
@@ -84,6 +84,52 @@ app.get("/api/public/:id", async (req, res) => {
         console.error("Error fetching movie details:", error);
         res.status(500).json({ error: "Failed to fetch movie details" });
     }
+});
+
+//USER -- for fetching the users from pg;
+app.get("/api/users", (req, res) => {
+    pool.query("SELECT * FROM users;")
+        .then((data) => res.json(data.rows))
+        .catch((e) => res.status(500).json({ message: e.message }));
+});
+//USER -- for posting the users to pg;
+app.post("/api/users", (req, res) => {
+    const { first_name, last_name, email, password } = req.body;
+    pool.query(
+        "INSERT INTO movies (title, director, year, rating, poster) VALUES ($1, $2, $3, $4) RETURNING *;",
+        [first_name, last_name, email, password]
+    )
+        .then(({ rows }) => {
+            console.log(rows);
+            res.status(200).json(rows[0]);
+        })
+        .catch((e) => res.status(500).json({ message: e.message }));
+});
+
+//USER -- for deleting the users from pg;
+app.delete("/api/users/:user_id", (req, res) => {
+    const { user_id } = req.params;
+    const { first_name, last_name, email, password } = req.body;
+    pool.query("DELETE FROM movies WHERE id=$1 RETURNING *;", [user_id])
+        .then(({ rows }) => {
+            console.log(rows);
+            res.status(200).json(rows[0]);
+        })
+        .catch((e) => res.status(500).json({ message: e.message }));
+});
+//USER -- to update user account info on pg
+app.put("/api/users/:user_id", (req, res) => {
+    const { user_id } = req.params;
+    const { first_name, last_name, email, password } = req.body;
+    pool.query(
+        "UPDATE users SET first_name = $1, last_name=$2, email=$3, password=$4 WHERE user_id=$6 RETURNING *;",
+        [first_name, last_name, email, password, user_id]
+    )
+        .then(({ rows }) => {
+            console.log(rows);
+            res.status(200).json(rows[0]);
+        })
+        .catch((e) => res.status(500).json({ message: e.message }));
 });
 
 app.post("/api/movies", (req, res) => {
